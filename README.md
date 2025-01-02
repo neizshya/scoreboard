@@ -1,4 +1,4 @@
-this is for frontend developer test of pt. Andara Rejo Makmur
+this is for frontend developer test answer of pt. Andara Rejo Makmur
 
 after cloning the repository, add .env.local and add this line inside of it
 
