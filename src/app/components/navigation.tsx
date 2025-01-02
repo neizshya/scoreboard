@@ -138,14 +138,7 @@ export const Navigations = () => {
                   <button
                     onClick={() => setDropdownOpen((prev) => !prev)}
                     className="flex items-center space-x-2 border border-gray-300 px-4 py-2 rounded bg-white hover:bg-gray-700 hover:text-white">
-                    <Image
-                      src={user?.imageUrl || "/img/default-avatar.svg"}
-                      alt="User Avatar"
-                      width={24}
-                      height={24}
-                      className="rounded-full"
-                    />
-                    <span>{user?.username || "User"}</span>
+                    <p>{user?.username || "User"}</p>
                   </button>
 
                   {dropdownOpen && (

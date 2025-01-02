@@ -7,6 +7,7 @@ import { ShareButton } from "../components/shareButton";
 import { baseAPI } from "../api/baseAPI";
 import Loading from "./loading";
 import { useUser } from "@clerk/nextjs";
+import Modal from "../components/modal";
 
 function ScoreModal({
   title,
@@ -53,37 +54,29 @@ function ScoreModal({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white rounded p-6 max-w-sm w-full">
-        <h2 className="text-2xl font-bold mb-4 text-black">{title}</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={score}
-            onChange={handleInputChange}
-            placeholder={placeholder}
-            className="w-full px-4 py-2 mb-2 border rounded bg-gray-400 text-white dark:bg-white dark:text-black"
-          />
-          {warning && <p className="text-red-500 text-sm mb-4">{warning}</p>}
-          <div className="flex justify-end space-x-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="py-2 px-4 bg-red-500 rounded text-white">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className={`py-2 px-4 ${
-                isSubmitting ? "bg-gray-400" : "bg-blue-500"
-              } text-white rounded`}
-              disabled={isSubmitting || !!warning || score === ""}>
-              {isSubmitting ? "Submitting..." : "Submit"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <Modal onClose={onClose}>
+      <h2 className="text-2xl font-bold mb-4 text-black">{title}</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={score}
+          onChange={handleInputChange}
+          placeholder={placeholder}
+          className="w-full px-4 py-2 mb-2 border rounded bg-gray-400 text-white dark:bg-white dark:text-black"
+        />
+        {warning && <p className="text-red-500 text-sm mb-4">{warning}</p>}
+        <div className="flex justify-end space-x-2">
+          <button
+            type="submit"
+            className={`py-2 px-4 ${
+              isSubmitting ? "bg-gray-400" : "bg-blue-500"
+            } text-white rounded`}
+            disabled={isSubmitting || !!warning || score === ""}>
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -101,7 +94,17 @@ function ChangeProfileImageModal({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage(
+          "File size exceeds 5MB. Please upload a smaller image."
+        );
+        return;
+      }
+
+      setErrorMessage("");
+      setSelectedFile(file);
     }
   };
 
@@ -134,35 +137,68 @@ function ChangeProfileImageModal({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white rounded p-6 max-w-sm w-full">
-        <h2 className="text-2xl font-bold mb-4 text-black">
-          Change Profile Image
-        </h2>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="w-full mb-4 text-black"
-        />
-        {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
-        <div className="flex justify-end space-x-2">
-          <button
-            onClick={onClose}
-            className="py-2 px-4 bg-red-500 rounded text-white">
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className={`py-2 px-4 ${
-              isUploading ? "bg-gray-400" : "bg-blue-500"
-            } text-white rounded`}
-            disabled={isUploading}>
-            {isUploading ? "Uploading..." : "Submit"}
-          </button>
-        </div>
+    <Modal onClose={onClose}>
+      <h2 className="text-2xl font-bold mb-4 text-black">
+        Change Profile Image
+      </h2>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="w-full mb-4 text-black"
+      />
+      {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
+      <div className="flex justify-end space-x-2">
+        <button
+          onClick={handleSubmit}
+          className={`py-2 px-4 ${
+            isUploading ? "bg-gray-400" : "bg-blue-500"
+          } text-white rounded`}
+          disabled={isUploading}>
+          {isUploading ? "Uploading..." : "Submit"}
+        </button>
       </div>
-    </div>
+    </Modal>
+  );
+}
+
+function DeleteConfirmationModal({
+  onClose,
+  onConfirm,
+}: {
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+}) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      await onConfirm();
+      onClose();
+    } catch (error) {
+      console.error("Error deleting score:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <Modal onClose={onClose}>
+      <h2 className="text-2xl font-bold mb-4 text-black">
+        Are you sure you want to delete this score?
+      </h2>
+      <div className="flex justify-end space-x-2">
+        <button
+          onClick={handleConfirm}
+          className={`py-2 px-4 ${
+            isDeleting ? "bg-gray-400" : "bg-red-500"
+          } text-white rounded`}
+          disabled={isDeleting}>
+          {isDeleting ? "Deleting..." : "Confirm"}
+        </button>
+      </div>
+    </Modal>
   );
 }
 
@@ -173,13 +209,14 @@ export default function MyScoresComponent({
   userObj: User;
   scores: Scores[];
 }) {
-  // const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [updatedScores, setUpdatedScores] = useState(scores);
   const [scoreToEdit, setScoreToEdit] = useState<Scores | null>(null);
   const [isChangeImageModalOpen, setIsChangeImageModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [scoreToDelete, setScoreToDelete] = useState<Scores | null>(null);
 
   const handleImageChange = async () => {
     setIsLoading(true);
@@ -203,6 +240,7 @@ export default function MyScoresComponent({
             username: userObj.username,
             score: newScore,
             photo_url: userObj.imageUrl,
+            email: userObj.email,
             createdAt: new Date().toISOString(),
           }),
         });
@@ -210,6 +248,9 @@ export default function MyScoresComponent({
         if (res.ok) {
           const addedScore = await res.json();
           setUpdatedScores((prevScores) => [...prevScores, addedScore]);
+          console.log("====================================");
+          console.log("successfully added score");
+          console.log("====================================");
         }
       } catch (error) {
         console.error("Failed to add score:", error);
@@ -219,6 +260,28 @@ export default function MyScoresComponent({
     },
     [userObj]
   );
+
+  const handleDeleteScore = useCallback(async (scoreId: number) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${baseAPI}/${scoreId.toString()}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setUpdatedScores((prevScores) =>
+          prevScores.filter((score) => score.id !== scoreId)
+        );
+        console.log("Score deleted successfully");
+      } else {
+        console.error("Failed to delete score");
+      }
+    } catch (error) {
+      console.error("Error deleting score:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const handleEditScore = useCallback(
     async (updatedScore: number) => {
@@ -242,6 +305,9 @@ export default function MyScoresComponent({
             )
           );
           setScoreToEdit(null);
+          console.log("====================================");
+          console.log("successfully edited score");
+          console.log("====================================");
         }
       } catch (error) {
         console.error("Failed to edit score:", error);
@@ -287,27 +353,7 @@ export default function MyScoresComponent({
             Add Score
           </button>
         </div>
-        {isModalOpen && (
-          <ScoreModal
-            title="Add Score"
-            placeholder="Enter your score"
-            initialValue=""
-            onClose={() => setIsModalOpen(false)}
-            onSubmit={handleAddScore}
-          />
-        )}
-        {isEditModalOpen && scoreToEdit && (
-          <ScoreModal
-            title="Edit Score"
-            placeholder="Edit your score"
-            initialValue={scoreToEdit.score}
-            onClose={() => {
-              setIsEditModalOpen(false);
-              setScoreToEdit(null);
-            }}
-            onSubmit={handleEditScore}
-          />
-        )}
+
         {updatedScores.length === 0 ? (
           <p className="text-center text-lg text-red-500">
             No scores found for {userObj.username}.
@@ -330,16 +376,27 @@ export default function MyScoresComponent({
                   <td className="py-2 px-4 border-b">
                     {new Date(score.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="py-2 px-4 border-b">
+                  <td className="py-2 px-4 border-b flex flex-row gap-x-4 justify-center items-center">
                     <button
                       onClick={() => {
                         setScoreToEdit(score);
                         setIsEditModalOpen(true);
                       }}
-                      className="py-1 px-3 bg-green-500 text-white rounded mr-2">
+                      className="py-1 px-3 bg-green-500 text-white rounded ">
                       Edit
                     </button>
-                    <ShareButton score={score.score} />
+                    <button
+                      onClick={() => {
+                        setScoreToDelete(score);
+                        setIsDeleteModalOpen(true);
+                      }}
+                      className="py-1 px-3 bg-red-500 text-white rounded">
+                      Delete
+                    </button>
+                    <ShareButton
+                      score={score.score}
+                      username={`${userObj.username}`}
+                    />
                   </td>
                 </tr>
               ))}
@@ -347,10 +404,44 @@ export default function MyScoresComponent({
           </table>
         )}
       </div>
+      {isModalOpen && (
+        <ScoreModal
+          title="Add Score"
+          placeholder="Enter your score"
+          initialValue=""
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleAddScore}
+        />
+      )}
+      {isEditModalOpen && scoreToEdit && (
+        <ScoreModal
+          title="Edit Score"
+          placeholder="Edit your score"
+          initialValue={scoreToEdit.score}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setScoreToEdit(null);
+          }}
+          onSubmit={handleEditScore}
+        />
+      )}
       {isChangeImageModalOpen && (
         <ChangeProfileImageModal
           onClose={() => setIsChangeImageModalOpen(false)}
           onImageChange={handleImageChange}
+        />
+      )}
+      {isDeleteModalOpen && scoreToDelete && (
+        <DeleteConfirmationModal
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setScoreToDelete(null);
+          }}
+          onConfirm={async () => {
+            if (scoreToDelete) {
+              await handleDeleteScore(scoreToDelete.id);
+            }
+          }}
         />
       )}
     </div>

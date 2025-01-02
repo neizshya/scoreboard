@@ -40,6 +40,7 @@ export default async function MyScoresPage() {
     }
 
     const user = await currentUser();
+
     if (!user) {
       console.error("No user found.");
       throw new Error("You must be logged in to view this page.");
@@ -58,7 +59,7 @@ export default async function MyScoresPage() {
     }
 
     const simplifiedUserObj = {
-      id: user.id,
+      id: parseInt(user.id),
       username: user.username || "Unknown User",
       imageUrl: user.imageUrl || "",
       email,

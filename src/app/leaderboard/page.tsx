@@ -49,7 +49,7 @@ const LeaderBoard = () => {
           placeholder="Search by name"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="px-4 py-2 w-1/2 sm:w-1/3 md:w-1/4 border rounded-lg bg-black text-white"
+          className="px-4 py-2 w-1/2 sm:w-1/3 md:w-1/4 border rounded-lg bg-white text-black"
         />
       </div>
 
@@ -84,19 +84,20 @@ const LeaderBoard = () => {
                     </td>
                     <td className="py-2 px-4 border-b flex items-center justify-start gap-x-4">
                       {score.photo_url ? (
-                        <div className="flex justify-center items-center my-2">
+                        <div className="flex justify-center items-center  my-2">
                           <Image
                             src={`${score.photo_url}`}
                             alt={score.username}
-                            width={50}
-                            height={50}
-                            className="rounded-full h-full w-full"
+                            width={40} // Set fixed width
+                            height={40} // Set fixed height
+                            className="w-10 h-10 object-cover rounded-full" // Apply fixed width, height, object-cover to ensure no distortion, and rounded corners
                             priority
                           />
                         </div>
                       ) : (
                         <div className="w-10 h-10 bg-gray-300 rounded-full" />
                       )}
+
                       {score.username}
                     </td>
                     <td className="py-2 px-4 border-b">{score.email}</td>
