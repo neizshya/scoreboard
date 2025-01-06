@@ -128,9 +128,9 @@ export const Navigations = () => {
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
               <SignedOut>
-                <button className="border py-1 px-3 rounded-md bg-white hover:bg-gray-700 hover:text-white block text-base font-medium">
+                <a className="border py-1 px-3 rounded-md bg-white hover:bg-gray-700 hover:text-white block text-base font-medium">
                   <SignInButton mode="modal" />
-                </button>
+                </a>
               </SignedOut>
 
               <SignedIn>
