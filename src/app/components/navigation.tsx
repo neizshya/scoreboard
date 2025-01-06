@@ -77,7 +77,7 @@ export const Navigations = () => {
               </DisclosureButton>
             </div>
             <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-              <div className="flex shrink-0 items-center">
+              <Link href={"/"} className="flex shrink-0 items-center">
                 <Image
                   className="invert"
                   src="/img/scoreboard.svg"
@@ -86,7 +86,7 @@ export const Navigations = () => {
                   height={38}
                   priority
                 />
-              </div>
+              </Link>
               <div className="hidden sm:ml-6 sm:block">
                 <div className="flex space-x-4">
                   {navigation.map((item) =>
